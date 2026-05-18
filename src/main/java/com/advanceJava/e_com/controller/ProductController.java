@@ -13,17 +13,18 @@ public class ProductController {
     private final ProductService productService;
 
     public ProductController(ProductService productService) {
+
         this.productService = productService;
     }
 
     @GetMapping
     public ResponseEntity<?> all() {
-        return ResponseEntity.ok(productService.getAll());
+        return ResponseEntity.ok(productService.getAll()); // List<ProductDTO>
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<?> one(@PathVariable Long id) {
-        return ResponseEntity.ok(productService.getById(id));
+        return ResponseEntity.ok(productService.getByIdDTO(id)); // ProductDTO
     }
 
 }

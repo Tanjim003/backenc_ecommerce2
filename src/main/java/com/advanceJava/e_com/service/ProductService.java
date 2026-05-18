@@ -1,10 +1,13 @@
 package com.advanceJava.e_com.service;
 
+import com.advanceJava.e_com.dto.ProductDTO;
 import com.advanceJava.e_com.models.Product;
 import com.advanceJava.e_com.repository.ProductRepository;
+import com.advanceJava.e_com.util.DTOMapper;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class ProductService {
@@ -14,14 +17,18 @@ public class ProductService {
         this.repo = repo;
     }
 
-    public Product add(Product p) {
-        return repo.save(p);
+    public ProductDTO add(Product p) {
+        Product saved = repo.save(p);
+        return DTOMapper.toProductDTO(saved);
     }
 
-    public List<Product> getAll() {
-        return repo.findAll();
-
+    public List<ProductDTO> getAll() {
+        List<Product> products = repo.findAll();
+        return products.stream()
+                .map(DTOMapper::toProductDTO)
+                .collect(Collectors.toList());
     }
+
     public Product getById(Long id) {
         return repo.findById(id).orElseThrow(() -> new RuntimeException("Product not found: " + id));
     }
@@ -42,4 +49,9 @@ public class ProductService {
         repo.updateStock(id, p.getStockQuantity() + qty);
     }
 
+    public Object getByIdDTO(Long id) {
+        Product product = repo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Product not found: " + id));
+        return DTOMapper.toProductDTO(product);
+    }
 }

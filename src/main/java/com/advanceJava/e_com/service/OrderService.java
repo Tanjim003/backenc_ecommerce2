@@ -1,15 +1,20 @@
 package com.advanceJava.e_com.service;
 
+import com.advanceJava.e_com.dto.OrderDTO;
+import com.advanceJava.e_com.dto.OrderItemDTO;
 import com.advanceJava.e_com.models.CartItem;
 import com.advanceJava.e_com.models.Order;
 import com.advanceJava.e_com.models.OrderItem;
 import com.advanceJava.e_com.models.Product;
 import com.advanceJava.e_com.repository.CartRepository;
 import com.advanceJava.e_com.repository.OrderRepository;
+import com.advanceJava.e_com.util.DTOMapper;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class OrderService {
@@ -62,28 +67,67 @@ public class OrderService {
         return saved;
     }
 
-    public List<Order> getMyOrders(Long userId) {
+    public List<OrderDTO> getMyOrders(Long userId) {
+        List<Order> orders = orderRepo.findByUserId(userId);
+        return orders.stream()
+                .map(DTOMapper::toOrderDTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<Order> getMyOrdersEntities(Long userId) {
         return orderRepo.findByUserId(userId);
     }
 
-    public Order getById(Long id) {
-        return orderRepo.findById(id).orElseThrow(() -> new RuntimeException("Order not found: " + id));
+    public OrderDTO getById(Long id) {
+        Order order = orderRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Order not found: " + id));
+        return DTOMapper.toOrderDTO(order);
     }
 
-    public List<Order> getAllOrders() {
-        return orderRepo.findAll();
+    public List<OrderDTO> getAllOrders() {
+        List<Order> orders = orderRepo.findAll();
+        return orders.stream()
+                .map(DTOMapper::toOrderDTO)
+                .collect(Collectors.toList());
     }
 
-    public List<OrderItem> getItems(Long orderId) {
-        return orderRepo.findItemsByOrderId(orderId);
+    public Map<String, Object> getOrderWithItems(Long orderId) {
+        OrderDTO order = getById(orderId);
+        List<OrderItem> items = orderRepo.findItemsByOrderId(orderId);
+        List<OrderItemDTO> itemDTOs = items.stream()
+                .map(item -> {
+                    Product product = productService.getById(item.getProductId());
+                    return DTOMapper.toOrderItemDTO(item, product.getName());
+                })
+                .collect(Collectors.toList());
+        return Map.of("order", order, "items", itemDTOs);
     }
+
+//    public List<OrderItem> getItems(Long orderId) {
+//        return orderRepo.findItemsByOrderId(orderId);
+//    }
 
     public void updateStatus(Long orderId, String status) {
         orderRepo.updateStatus(orderId, status);
     }
 
 
+    public List<OrderItemDTO> getItems(Long orderId) {
+        // 1. Fetch entity list from repository
+        List<OrderItem> items = orderRepo.findItemsByOrderId(orderId);
 
-
-
+        // 2. Convert each to OrderItemDTO including product name
+        return items.stream()
+                .map(item -> {
+                    Product product = productService.getById(item.getProductId());
+                    return DTOMapper.toOrderItemDTO(item, product.getName());
+                })
+                .collect(Collectors.toList());
     }
+    // OrderService.java
+    public List<OrderItem> getOrderItemsEntities(Long orderId) {
+        return orderRepo.findItemsByOrderId(orderId);
+    }
+
+
+}

@@ -48,7 +48,7 @@ public class UserRepositoryImpl implements UserRepository{
     @Override
     public Optional<User> findByUserName(String username) {
         List<User> result =
-                jdbc.query("SELECT * FROM users WHERE = username = ?", rowMapper, username);
+                jdbc.query("SELECT * FROM users WHERE username = ?", rowMapper, username);
         return result.isEmpty() ? Optional.empty() : Optional.of(result.get(0));
     }
 }
